@@ -1,2 +1,2 @@
-# V3c0rX-gui
+# lua Script 
 This script‘s only work on Roblox 
