@@ -1,0 +1,1331 @@
+VSC
+-- ==============================================================================
+-- VSC Hub | mm2 (Modern Dark Purple Design - Vollständig mit CRYPTIC)
+-- ==============================================================================
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+
+local isMM2 = false
+local success, placeName = pcall(function()
+	return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+end)
+
+if game.PlaceId == 142823291 or (success and string.find(string.lower(placeName), "murder mystery 2")) then
+	isMM2 = true
+end
+
+if not isMM2 then
+	print("[VanilBean SystemCheck]: This script only works in Murder Mystery 2 (MM2)!")
+	
+	local player = Players.LocalPlayer
+	local pgui = (gethui and gethui()) or CoreGui:FindFirstChild("RobloxGui") or player:WaitForChild("PlayerGui")
+	
+	local alertGui = Instance.new("ScreenGui")
+	alertGui.Name = "MM2_NotSupportedAlert"
+	alertGui.ResetOnSpawn = false
+	alertGui.Parent = pgui
+	
+	local alertFrame = Instance.new("Frame")
+	alertFrame.Size = UDim2.new(0, 320, 0, 110)
+	alertFrame.Position = UDim2.new(0.5, -160, 0.5, -55)
+	alertFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+	alertFrame.BorderSizePixel = 0
+	alertFrame.Active = true
+	alertFrame.Draggable = true
+	alertFrame.Parent = alertGui
+	
+	local alertStroke = Instance.new("UIStroke")
+	alertStroke.Color = Color3.fromRGB(160, 80, 255)
+	alertStroke.Thickness = 1
+	alertStroke.Parent = alertFrame
+
+	local alertCorner = Instance.new("UICorner")
+	alertCorner.CornerRadius = UDim.new(0, 8)
+	alertCorner.Parent = alertFrame
+	
+	local alertTitle = Instance.new("TextLabel")
+	alertTitle.Size = UDim2.new(1, 0, 0, 35)
+	alertTitle.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+	alertTitle.BackgroundTransparency = 0.8
+	alertTitle.BorderSizePixel = 0
+	alertTitle.Text = "  [SYSTEM ERROR]: WRONG GAME"
+	alertTitle.TextColor3 = Color3.fromRGB(255, 100, 100)
+	alertTitle.TextSize = 13
+	alertTitle.Font = Enum.Font.GothamBold
+	alertTitle.TextXAlignment = Enum.TextXAlignment.Left
+	alertTitle.Parent = alertFrame
+
+	local alertTitleCorner = Instance.new("UICorner")
+	alertTitleCorner.CornerRadius = UDim.new(0, 8)
+	alertTitleCorner.Parent = alertTitle
+	
+	local alertText = Instance.new("TextLabel")
+	alertText.Size = UDim2.new(0.9, 0, 0, 50)
+	alertText.Position = UDim2.new(0.05, 0, 0.4, 0)
+	alertText.BackgroundTransparency = 1
+	alertText.Text = "Access Denied.\nThe VanilBean Hub only operates in Murder Mystery 2."
+	alertText.TextColor3 = Color3.fromRGB(200, 200, 200)
+	alertText.TextSize = 11
+	alertText.Font = Enum.Font.Gotham
+	alertText.TextWrapped = true
+	alertText.Parent = alertFrame
+	
+	task.delay(10, function()
+		if alertGui and alertGui.Parent then
+			alertGui:Destroy()
+		end
+	end)
+	
+	return
+end
+
+print("[VanilBean SystemCheck]: MM2 detected! Initializing VSC 1.25")
+
+local player = Players.LocalPlayer
+
+local targetParent = nil
+if syn and syn.protect_gui then
+	local gui = Instance.new("ScreenGui")
+	syn.protect_gui(gui)
+	gui.Parent = CoreGui
+	gui:Destroy()
+	targetParent = CoreGui
+elseif gethui then
+	targetParent = gethui()
+else
+	targetParent = CoreGui:FindFirstChild("RobloxGui") or player:WaitForChild("PlayerGui")
+end
+
+local equippedItems = {}
+local isHeadless = false
+local isKorbloxActive = false
+
+local HAIR_ID = "6594913930"
+local ACC_ID_1 = "4390891467" -- Ice Valkyrie
+local ACC_ID_2 = "7335975590" -- VVS Diamond Earrings
+
+local HEADLESS_MESH_ID = "rbxassetid://1095708"
+local KORBLOX_MESH_ID = "rbxassetid://101851696"
+local KORBLOX_TEXTURE_ID = "rbxassetid://101851254"
+local DARK_GREY_COLOR = Color3.fromRGB(64, 64, 64)
+
+local iceValkOffsetZ = 0.0
+local korbloxOffset = Vector3.new(0.2, -0.6, 0.0)
+
+local savedConfig = {
+	iceValkZ = 0.0,
+	korbloxX = 0.2,
+	korbloxY = -0.6,
+	korbloxZ = 0.0,
+	hasSaved = true
+}
+
+local executorName = "Unknown"
+pcall(function()
+	if identifyexecutor then
+		executorName = identifyexecutor()
+	elseif syn then
+		executorName = "Synapse X"
+	elseif KRNL_LOADED then
+		executorName = "Krnl"
+	elseif Fluxus then
+		executorName = "Fluxus"
+	elseif Delta then
+		executorName = "Delta"
+	elseif Hydrogen then
+		executorName = "Hydrogen"
+	elseif Wave then
+		executorName = "Wave"
+	end
+end)
+
+local currentLang = "de"
+local translations = {
+	de = {
+		title = "VSC Hub | mm2",
+		mainTab = "Hauptmenü",
+		settingsTab = "Einstellungen",
+		profileTab = "Profil",
+		outfitBtn = "Outfit & Korblox laden",
+		solixBtn = "Solix Hub ausführen",
+		clanBtn = "c00lCLAN v1 ausführen",
+		testolBtn = "testol hub ausführen",
+		crypticBtn = "CRYPTIC ausführen",
+		statusReady = "Status: Bereit // Warten...",
+		statusChar = "Fehler: Kein Avatar gefunden!",
+		statusLoaded = "Status: Outfit & Korblox sicher geladen!",
+		statusIncomplete = "Status: Lade-Sequenz unvollständig!",
+		statusSaved = "Status: Konfiguration im Speicher gesichert!",
+		statusSolixLoad = "Status: Lade Solix herunter...",
+		statusSolixExec = "Status: Solix aktiv!",
+		statusClanLoad = "Status: Lade Clan herunter...",
+		statusClanExec = "Status: c00lCLAN aktiv!",
+		statusTestolLoad = "Status: Lade testol hub herunter...",
+		statusTestolExec = "Status: testol hub aktiv!",
+		statusCrypticLoad = "Status: Lade CRYPTIC herunter...",
+		statusCrypticExec = "Status: CRYPTIC aktiv!",
+		lblTitleChange = "Hub Titel Name:",
+		lblThemeColor = "Akzentfarbe:",
+		lblTextColor = "Interface Textfarbe:",
+		lblBgColor = "Terminal Hintergrund:",
+		lblBgTrans = "Glas Transparenz:",
+		lblIceValkOffset = "Ice Valkyrie Z-Offset:",
+		lblKorbloxOffset = "Korblox Vektor Matrix (X, Y, Z):",
+		lblSaveConfig = "Benutzerdefinierte Konfiguration speichern:",
+		saveBtnText = "Konfiguration speichern",
+		lblLang = "Systemsprache auswählen:",
+		lblHotkey = "Hardware Shortcut:",
+		hotkeyDesc = "Drücke [Q], um das Interface-Overlay ein-/auszuschalten.",
+		profileTitle = "Benutzer Node Daten",
+		playerLbl = "Operator ID:",
+		creatorLbl = "Hub Ersteller:",
+		execLbl = "Ausführungs-Engine:"
+	},
+	en = {
+		title = "VSC Hub | mm2",
+		mainTab = "Main Menu",
+		settingsTab = "Config",
+		profileTab = "Profile",
+		outfitBtn = "Outfit Script",
+		solixBtn = "Solix Hub",
+		clanBtn = "c00lCLAN v1",
+		testolBtn = "testol hub",
+		crypticBtn = "CRYPTIC Hub",
+		statusReady = "Status: Ready // Waiting...",
+		statusChar = "Error: No Avatar Found!",
+		statusLoaded = "Status: Outfit & Korblox Loaded Securely!",
+		statusIncomplete = "Status: Load Sequence Incomplete!",
+		statusSaved = "Status: Config Saved to Memory!",
+		statusSolixLoad = "Status: Downloading Solix...",
+		statusSolixExec = "Status: Solix Active!",
+		statusClanLoad = "Status: Downloading Clan...",
+		statusClanExec = "Status: c00lCLAN Active!",
+		statusTestolLoad = "Status: Downloading testol hub...",
+		statusTestolExec = "Status: testol hub Active!",
+		statusCrypticLoad = "Status: Downloading CRYPTIC...",
+		statusCrypticExec = "Status: CRYPTIC Active!",
+		lblTitleChange = "Hub Title Name:",
+		lblThemeColor = "Accent Color:",
+		lblTextColor = "Interface Text Color:",
+		lblBgColor = "Terminal Background:",
+		lblBgTrans = "Glass Transparency:",
+		lblIceValkOffset = "Ice Valkyrie Z-Offset:",
+		lblKorbloxOffset = "Korblox Vector Matrix (X, Y, Z):",
+		lblSaveConfig = "Save Custom Configuration:",
+		saveBtnText = "Save Configuration",
+		lblLang = "Select System Language:",
+		lblHotkey = "Hardware Shortcut:",
+		hotkeyDesc = "Press [Q] to toggle the interface overlay.",
+		profileTitle = "User Node Data",
+		playerLbl = "Operator ID:",
+		creatorLbl = "Hub Creator:",
+		execLbl = "Execution Engine:"
+	}
+}
+
+local function L(key)
+	if translations[currentLang] and translations[currentLang][key] then
+		return translations[currentLang][key]
+	end
+	return translations["en"][key] or key
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MM2_ModernHub"
+screenGui.ResetOnSpawn = false
+screenGui.Enabled = true
+if syn and syn.protect_gui then
+	syn.protect_gui(screenGui)
+end
+screenGui.Parent = targetParent
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 480, 0, 330)
+mainFrame.Position = UDim2.new(0.5, -240, 0.5, -165)
+mainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+mainFrame.BackgroundTransparency = 0.05
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Visible = true
+mainFrame.ClipsDescendants = true
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 8)
+mainCorner.Parent = mainFrame
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Name = "MainStroke"
+mainStroke.Color = Color3.fromRGB(160, 80, 255)
+mainStroke.Thickness = 1
+mainStroke.Parent = mainFrame
+
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1, 0, 0, 38)
+titleBar.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+titleBar.BorderSizePixel = 0
+titleBar.ClipsDescendants = true
+titleBar.Parent = mainFrame
+
+local titleBarCorner = Instance.new("UICorner")
+titleBarCorner.CornerRadius = UDim.new(0, 8)
+titleBar.Parent = mainFrame
+
+local fixBottomBar = Instance.new("Frame")
+fixBottomBar.Size = UDim2.new(1, 0, 0, 10)
+fixBottomBar.Position = UDim2.new(0, 0, 1, -10)
+fixBottomBar.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+fixBottomBar.BorderSizePixel = 0
+fixBottomBar.Parent = titleBar
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Size = UDim2.new(1, -90, 1, 0)
+titleLabel.Position = UDim2.new(0, 14, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = L("title")
+titleLabel.TextColor3 = Color3.fromRGB(220, 220, 230)
+titleLabel.TextSize = 12
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = titleBar
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 26, 0, 26)
+closeBtn.Position = UDim2.new(1, -32, 0.5, -13)
+closeBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+closeBtn.BorderSizePixel = 0
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeBtn.TextSize = 11
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.Parent = titleBar
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 6)
+closeCorner.Parent = closeBtn
+
+local minBtn = Instance.new("TextButton")
+minBtn.Size = UDim2.new(0, 26, 0, 26)
+minBtn.Position = UDim2.new(1, -64, 0.5, -13)
+minBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+minBtn.BorderSizePixel = 0
+minBtn.Text = "-"
+minBtn.TextColor3 = Color3.fromRGB(220, 220, 230)
+minBtn.TextSize = 12
+minBtn.Font = Enum.Font.GothamBold
+minBtn.Parent = titleBar
+
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(0, 6)
+minCorner.Parent = minBtn
+
+local floatGui = Instance.new("ScreenGui")
+floatGui.Name = "MM2_ModernFloat"
+floatGui.ResetOnSpawn = false
+floatGui.Enabled = false
+if syn and syn.protect_gui then
+	syn.protect_gui(floatGui)
+end
+floatGui.Parent = targetParent
+
+local floatBtn = Instance.new("TextButton")
+floatBtn.Size = UDim2.new(0, 52, 0, 52)
+floatBtn.Position = UDim2.new(0, 20, 0.4, 0)
+floatBtn.BackgroundColor3 = Color3.fromRGB(30, 25, 42)
+floatBtn.BorderSizePixel = 0
+floatBtn.Text = "VSC"
+floatBtn.TextColor3 = Color3.fromRGB(210, 130, 255)
+floatBtn.TextSize = 14
+floatBtn.Font = Enum.Font.GothamBold
+floatBtn.Active = true
+floatBtn.Draggable = true
+floatBtn.Parent = floatGui
+
+local floatCorner = Instance.new("UICorner")
+floatCorner.CornerRadius = UDim.new(0, 12)
+floatCorner.Parent = floatBtn
+
+local floatStroke = Instance.new("UIStroke")
+floatStroke.Name = "FloatStroke"
+floatStroke.Color = Color3.fromRGB(160, 80, 255)
+floatStroke.Thickness = 2
+floatStroke.Parent = floatBtn
+
+closeBtn.MouseButton1Click:Connect(function()
+	mainFrame.Visible = false
+	floatGui.Enabled = true
+end)
+
+floatBtn.MouseButton1Click:Connect(function()
+	mainFrame.Visible = true
+	floatGui.Enabled = false
+end)
+
+local sidebar = Instance.new("Frame")
+sidebar.Size = UDim2.new(0, 130, 1, -48)
+sidebar.Position = UDim2.new(0, 8, 0, 42)
+sidebar.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+sidebar.BorderSizePixel = 0
+sidebar.Parent = mainFrame
+
+local sidebarCorner = Instance.new("UICorner")
+sidebarCorner.CornerRadius = UDim.new(0, 6)
+sidebarCorner.Parent = sidebar
+
+local sidebarLayout = Instance.new("UIListLayout")
+sidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+sidebarLayout.Padding = UDim.new(0, 4)
+sidebarLayout.Parent = sidebar
+
+local pad = Instance.new("UIPadding")
+pad.PaddingLeft = UDim.new(0, 6)
+pad.PaddingTop = UDim.new(0, 6)
+pad.Parent = sidebar
+
+local contentArea = Instance.new("Frame")
+contentArea.Size = UDim2.new(1, -150, 1, -48)
+contentArea.Position = UDim2.new(0, 144, 0, 42)
+contentArea.BackgroundTransparency = 1
+contentArea.Parent = mainFrame
+
+local tabs = {}
+local activeTabName = "Main"
+
+local function createTabContainer(name)
+	local tab = Instance.new("ScrollingFrame")
+	tab.Name = name .. "Tab"
+	tab.Size = UDim2.new(1, 0, 1, 0)
+	tab.Position = UDim2.new(0, 0, 0, 0)
+	tab.BackgroundTransparency = 1
+	tab.BorderSizePixel = 0
+	tab.CanvasSize = UDim2.new(0, 0, 0, 0)
+	tab.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	tab.ScrollBarThickness = 2
+	tab.Visible = false
+	tab.Parent = contentArea
+
+	local layout = Instance.new("UIListLayout")
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Padding = UDim.new(0, 8)
+	layout.Parent = tab
+
+	tabs[name] = tab
+	return tab
+end
+
+local mainTab = createTabContainer("Main")
+local settingsTab = createTabContainer("Settings")
+local profileTab = createTabContainer("Profile")
+
+local activeTabBtn = nil
+local function switchTab(tabName, btn)
+	activeTabName = tabName
+	for name, frame in pairs(tabs) do
+		frame.Visible = (name == tabName)
+	end
+	if activeTabBtn then
+		activeTabBtn.BackgroundColor3 = Color3.fromRGB(26, 26, 34)
+		activeTabBtn.TextColor3 = Color3.fromRGB(160, 160, 180)
+	end
+	activeTabBtn = btn
+	btn.BackgroundColor3 = Color3.fromRGB(160, 80, 255)
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+end
+
+local tabButtonObjects = {}
+local function createTabButton(textKey, order, targetTabName)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, -6, 0, 32)
+	btn.BackgroundColor3 = Color3.fromRGB(26, 26, 34)
+	btn.BorderSizePixel = 0
+	btn.Text = L(textKey)
+	btn.TextColor3 = Color3.fromRGB(160, 160, 180)
+	btn.Font = Enum.Font.GothamSemibold
+	btn.TextSize = 11
+	btn.TextXAlignment = Enum.TextXAlignment.Left
+	btn.LayoutOrder = order
+	btn.Parent = sidebar
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 6)
+	btnCorner.Parent = btn
+
+	local btnPadding = Instance.new("UIPadding")
+	btnPadding.PaddingLeft = UDim.new(0, 10)
+	btnPadding.Parent = btn
+
+	btn.MouseButton1Click:Connect(function()
+		switchTab(targetTabName, btn)
+	end)
+
+	table.insert(tabButtonObjects, {btn = btn, key = textKey})
+	return btn
+end
+
+local mainTabBtn = createTabButton("mainTab", 1, "Main")
+local settingsTabBtn = createTabButton("settingsTab", 2, "Settings")
+local profileTabBtn = createTabButton("profileTab", 3, "Profile")
+
+switchTab("Main", mainTabBtn)
+
+local registeredTextObjects = {}
+local function registerTextColor(obj)
+	table.insert(registeredTextObjects, obj)
+	return obj
+end
+
+local function createButtonInTab(parentTab, textKey, colorTheme, order, callback)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, -6, 0, 36)
+	btn.BackgroundColor3 = Color3.fromRGB(26, 26, 34)
+	btn.BorderSizePixel = 0
+	btn.Text = L(textKey)
+	btn.TextColor3 = Color3.fromRGB(220, 220, 230)
+	btn.Font = Enum.Font.GothamMedium
+	btn.TextSize = 11
+	btn.AutoButtonColor = false
+	btn.LayoutOrder = order
+	btn.Parent = parentTab
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 6)
+	btnCorner.Parent = btn
+
+	local btnStroke = Instance.new("UIStroke")
+	btnStroke.Color = Color3.fromRGB(45, 45, 60)
+	btnStroke.Transparency = 0.5
+	btnStroke.Thickness = 1
+	btnStroke.Parent = btn
+
+	btn.MouseEnter:Connect(function()
+		TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(36, 36, 46)}):Play()
+	end)
+	btn.MouseLeave:Connect(function()
+		TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(26, 26, 34)}):Play()
+	end)
+
+	btn.MouseButton1Click:Connect(callback)
+	registerTextColor(btn)
+	return btn
+end
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, -6, 0, 24)
+statusLabel.LayoutOrder = 6
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = L("statusReady")
+statusLabel.TextColor3 = Color3.fromRGB(160, 160, 180)
+statusLabel.TextSize = 10
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextXAlignment = Enum.TextXAlignment.Center
+statusLabel.Parent = mainTab
+registerTextColor(statusLabel)
+
+local function removeFace(head)
+	local face = head:FindFirstChild("face")
+	if face then face:Destroy() end
+end
+
+local function applyHeadlessState(char)
+	local head = char:FindFirstChild("Head")
+	if head then
+		head.Transparency = 1
+		head.CanCollide = false
+		removeFace(head)
+		local mesh = Instance.new("SpecialMesh")
+		mesh.MeshType = Enum.MeshType.FileMesh
+		mesh.MeshId = HEADLESS_MESH_ID
+		mesh.Scale = Vector3.new(0.001, 0.001, 0.001)
+		mesh.Parent = head
+		return true
+	end
+	return false
+end
+
+local function applyKorbloxR6(character)
+	local rightLeg = character:FindFirstChild("Right Leg")
+	if not rightLeg then return end
+	for _, child in ipairs(rightLeg:GetChildren()) do
+		if child:IsA("SpecialMesh") or child:IsA("CharacterMesh") then child:Destroy() end
+	end
+	rightLeg.Color = DARK_GREY_COLOR
+	local korbloxMesh = Instance.new("SpecialMesh")
+	korbloxMesh.MeshType = Enum.MeshType.FileMesh
+	korbloxMesh.MeshId = KORBLOX_MESH_ID
+	korbloxMesh.TextureId = KORBLOX_TEXTURE_ID
+	korbloxMesh.Scale = Vector3.new(1, 1, 1)
+	korbloxMesh.Parent = rightLeg
+end
+
+local function applyKorbloxR15(character)
+	local rightUpperLeg = character:FindFirstChild("RightUpperLeg")
+	if not rightUpperLeg then return end
+	rightUpperLeg.Transparency = 1
+	local rightLowerLeg = character:FindFirstChild("RightLowerLeg")
+	local rightFoot = character:FindFirstChild("RightFoot")
+	if rightLowerLeg then rightLowerLeg.Transparency = 1 end
+	if rightFoot then rightFoot.Transparency = 1 end
+
+	local korbloxLeg = character:FindFirstChild("KorbloxLeg")
+	if not korbloxLeg then
+		korbloxLeg = Instance.new("Part")
+		korbloxLeg.Name = "KorbloxLeg"
+		korbloxLeg.Size = Vector3.new(1, 2, 1)
+		korbloxLeg.Anchored = false
+		korbloxLeg.CanCollide = false
+		korbloxLeg.Color = DARK_GREY_COLOR
+		korbloxLeg.Parent = character
+
+		local mesh = Instance.new("SpecialMesh")
+		mesh.MeshType = Enum.MeshType.FileMesh
+		mesh.MeshId = KORBLOX_MESH_ID
+		mesh.TextureId = KORBLOX_TEXTURE_ID
+		mesh.Scale = Vector3.new(1, 1, 1)
+		mesh.Parent = korbloxLeg
+	end
+
+	local weld = korbloxLeg:FindFirstChildOfClass("Weld")
+	if not weld then
+		weld = Instance.new("Weld")
+		weld.Part0 = rightUpperLeg
+		weld.Part1 = korbloxLeg
+		weld.Parent = korbloxLeg
+	end
+	weld.C0 = CFrame.new(korbloxOffset)
+end
+
+local function attachAccessory(acc, char, assetId)
+	local handle = acc:FindFirstChild("Handle")
+	if not handle then return false end
+	handle.CanCollide = false
+	handle.Massless = true
+	local attachment = handle:FindFirstChildOfClass("Attachment")
+	local targetPart = char:FindFirstChild("Head")
+	
+	if attachment then
+		local attachmentName = attachment.Name
+		for _, part in ipairs(char:GetChildren()) do
+			if part:IsA("BasePart") and part:FindFirstChild(attachmentName) then
+				targetPart = part
+				break
+			end
+		end
+		local targetAttachment = targetPart:FindFirstChild(attachmentName)
+		if targetAttachment then
+			handle.CFrame = targetAttachment.WorldCFrame * attachment.CFrame:Inverse()
+		else
+			handle.CFrame = targetPart.CFrame
+		end
+	else
+		handle.CFrame = targetPart.CFrame
+	end
+	
+	if assetId == 4390891467 then
+		handle.CFrame = handle.CFrame * CFrame.new(0, 0, -iceValkOffsetZ)
+	end
+	
+	local weld = Instance.new("WeldConstraint")
+	weld.Part0 = handle
+	weld.Part1 = targetPart
+	weld.Parent = handle
+	acc.Parent = char
+	return true
+end
+
+local function loadAssetWithRetry(assetIdStr, character)
+	local assetId = tonumber(assetIdStr)
+	local maxAttempts = 2
+	local successLoaded = false
+	for attempt = 1, maxAttempts do
+		local success, err = pcall(function()
+			local objects = game:GetObjects("rbxassetid://" .. assetId)
+			for _, item in ipairs(objects) do
+				if item:IsA("Accessory") then
+					if attachAccessory(item, character, assetId) then
+						table.insert(equippedItems, {id = tostring(assetId), itemRef = item})
+						successLoaded = true
+					end
+				end
+			end
+		end)
+		if successLoaded then break else task.wait(0.3) end
+	end
+	return successLoaded
+end
+
+local function fixCreatorTag(char)
+	local head = char:WaitForChild("Head", 5)
+	if not head then return end
+	
+	pcall(function()
+		if char:FindFirstChild("Humanoid") then
+			char.Humanoid.DisplayName = "VanilBean"
+		end
+	end)
+
+	local function scanAndForceTag(parent)
+		for _, obj in ipairs(parent:GetChildren()) do
+			if obj:IsA("BillboardGui") then
+				obj.Enabled = true
+				obj.AlwaysOnTop = true
+				for _, child in ipairs(obj:GetDescendants()) do
+					if child:IsA("TextLabel") then
+						if string.find(child.Text, player.Name) or string.find(child.Text, "VanilBean") or string.find(child.Text, "Creator") then
+							child.Text = "VanilBean ✓"
+							child.TextColor3 = Color3.fromRGB(160, 80, 255)
+						end
+					end
+					if child:IsA("ImageLabel") then
+						child.Visible = true
+					end
+				end
+			end
+		end
+	end
+
+	scanAndForceTag(head)
+	scanAndForceTag(char)
+	
+	task.spawn(function()
+		while char and char.Parent do
+			for _, obj in ipairs(char:GetDescendants()) do
+				if obj:IsA("BillboardGui") then
+					obj.Enabled = true
+					obj.AlwaysOnTop = true
+					for _, child in ipairs(obj:GetDescendants()) do
+						if child:IsA("TextLabel") and (string.find(child.Text, player.Name) or string.find(child.Text, "VanilBean") or string.find(child.Text, "Creator")) then
+							if not string.find(child.Text, "✓") then
+								child.Text = "VanilBean ✓"
+								child.TextColor3 = Color3.fromRGB(160, 80, 255)
+							end
+						end
+					end
+				end
+			end
+			task.wait(0.5)
+		end
+	end)
+end
+
+createButtonInTab(mainTab, "outfitBtn", Color3.fromRGB(160, 80, 255), 1, function()
+	local character = player.Character
+	if not character then 
+		statusLabel.Text = L("statusChar")
+		statusLabel.TextColor3 = Color3.fromRGB(220, 80, 80)
+		return 
+	end
+	for _, data in ipairs(equippedItems) do
+		if data.itemRef and data.itemRef.Parent then data.itemRef:Destroy() end
+	end
+	equippedItems = {}
+	isHeadless = true
+	isKorbloxActive = true
+	
+	if savedConfig.hasSaved then
+		iceValkOffsetZ = savedConfig.iceValkZ
+		korbloxOffset = Vector3.new(savedConfig.korbloxX, savedConfig.korbloxY, savedConfig.korbloxZ)
+	end
+	
+	applyHeadlessState(character)
+	
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		if humanoid.RigType == Enum.HumanoidRigType.R6 then
+			applyKorbloxR6(character)
+		elseif humanoid.RigType == Enum.HumanoidRigType.R15 then
+			applyKorbloxR15(character)
+		end
+	end
+	
+	task.wait(0.1)
+	local hairSuccess = loadAssetWithRetry(HAIR_ID, character)
+	local acc1Success = loadAssetWithRetry(ACC_ID_1, character)
+	local acc2Success = loadAssetWithRetry(ACC_ID_2, character)
+	
+	fixCreatorTag(character)
+	
+	if hairSuccess and acc1Success and acc2Success then
+		statusLabel.Text = L("statusLoaded")
+		statusLabel.TextColor3 = Color3.fromRGB(80, 200, 120)
+	else
+		statusLabel.Text = L("statusIncomplete")
+		statusLabel.TextColor3 = Color3.fromRGB(220, 180, 60)
+	end
+end)
+
+createButtonInTab(mainTab, "solixBtn", Color3.fromRGB(160, 80, 255), 2, function()
+	statusLabel.Text = L("statusSolixLoad")
+	statusLabel.TextColor3 = Color3.fromRGB(160, 80, 255)
+	pcall(function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/bao8jl/solixhub/main/loader", true))()
+	end)
+	statusLabel.Text = L("statusSolixExec")
+	statusLabel.TextColor3 = Color3.fromRGB(80, 200, 120)
+end)
+
+createButtonInTab(mainTab, "clanBtn", Color3.fromRGB(160, 80, 255), 3, function()
+	statusLabel.Text = L("statusClanLoad")
+	statusLabel.TextColor3 = Color3.fromRGB(160, 80, 255)
+	pcall(function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/cfsmi2/c00lguiv1/refs/heads/main/Main.lua", true))()
+	end)
+	statusLabel.Text = L("statusClanExec")
+	statusLabel.TextColor3 = Color3.fromRGB(80, 200, 120)
+end)
+
+createButtonInTab(mainTab, "testolBtn", Color3.fromRGB(160, 80, 255), 4, function()
+	statusLabel.Text = L("statusTestolLoad")
+	statusLabel.TextColor3 = Color3.fromRGB(160, 80, 255)
+	pcall(function()
+		loadstring(game:HttpGet("https://testol.org/scripts/testol_loader.lua"))()
+	end)
+	statusLabel.Text = L("statusTestolExec")
+	statusLabel.TextColor3 = Color3.fromRGB(80, 200, 120)
+end)
+
+createButtonInTab(mainTab, "crypticBtn", Color3.fromRGB(160, 80, 255), 5, function()
+	statusLabel.Text = L("statusCrypticLoad")
+	statusLabel.TextColor3 = Color3.fromRGB(160, 80, 255)
+	pcall(function()
+		loadstring(game:HttpGet('https://raw.githubusercontent.com/OnlyCryptic/Cryptic/main/main.lua'))()
+	end)
+	statusLabel.Text = L("statusCrypticExec")
+	statusLabel.TextColor3 = Color3.fromRGB(80, 200, 120)
+end)
+
+local profileHeader = Instance.new("TextLabel")
+profileHeader.Size = UDim2.new(1, -6, 0, 25)
+profileHeader.LayoutOrder = 1
+profileHeader.BackgroundTransparency = 1
+profileHeader.Text = L("profileTitle")
+profileHeader.TextColor3 = Color3.fromRGB(220, 220, 230)
+profileHeader.TextSize = 12
+profileHeader.Font = Enum.Font.GothamBold
+profileHeader.TextXAlignment = Enum.TextXAlignment.Left
+profileHeader.Parent = profileTab
+registerTextColor(profileHeader)
+
+local profileCard = Instance.new("Frame")
+profileCard.Size = UDim2.new(1, -6, 0, 100)
+profileCard.LayoutOrder = 2
+profileCard.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+profileCard.BorderSizePixel = 0
+profileCard.Parent = profileTab
+
+local pCardCorner = Instance.new("UICorner")
+pCardCorner.CornerRadius = UDim.new(0, 6)
+pCardCorner.Parent = profileCard
+
+local pCardStroke = Instance.new("UIStroke")
+pCardStroke.Color = Color3.fromRGB(45, 45, 60)
+pCardStroke.Transparency = 0.5
+pCardStroke.Thickness = 1
+pCardStroke.Parent = profileCard
+
+local avatarImg = Instance.new("ImageLabel")
+avatarImg.Size = UDim2.new(0, 72, 0, 72)
+avatarImg.Position = UDim2.new(0, 14, 0, 14)
+avatarImg.BackgroundTransparency = 1
+avatarImg.Image = "rbxthumb://type=AvatarHeadShot&id=" .. player.UserId .. "&w=150&h=150"
+avatarImg.Parent = profileCard
+
+local avatarCorner = Instance.new("UICorner")
+avatarCorner.CornerRadius = UDim.new(0, 36)
+avatarCorner.Parent = avatarImg
+
+local profilePlayerLabel = Instance.new("TextLabel")
+profilePlayerLabel.Size = UDim2.new(1, -100, 0, 20)
+profilePlayerLabel.Position = UDim2.new(0, 96, 0, 16)
+profilePlayerLabel.BackgroundTransparency = 1
+profilePlayerLabel.Text = L("playerLbl") .. " " .. player.Name
+profilePlayerLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+profilePlayerLabel.TextSize = 11
+profilePlayerLabel.Font = Enum.Font.GothamMedium
+profilePlayerLabel.TextXAlignment = Enum.TextXAlignment.Left
+profilePlayerLabel.Parent = profileCard
+registerTextColor(profilePlayerLabel)
+
+local profileCreatorLabel = Instance.new("TextLabel")
+profileCreatorLabel.Size = UDim2.new(1, -100, 0, 20)
+profileCreatorLabel.Position = UDim2.new(0, 96, 0, 40)
+profileCreatorLabel.BackgroundTransparency = 1
+profileCreatorLabel.Text = L("creatorLbl") .. " c00lkkid1ng"
+profileCreatorLabel.TextColor3 = Color3.fromRGB(160, 80, 255)
+profileCreatorLabel.TextSize = 10
+profileCreatorLabel.Font = Enum.Font.Gotham
+profileCreatorLabel.TextXAlignment = Enum.TextXAlignment.Left
+profileCreatorLabel.Parent = profileCard
+registerTextColor(profileCreatorLabel)
+
+local profileExecLabel = Instance.new("TextLabel")
+profileExecLabel.Size = UDim2.new(1, -100, 0, 20)
+profileExecLabel.Position = UDim2.new(0, 96, 0, 64)
+profileExecLabel.BackgroundTransparency = 1
+profileExecLabel.Text = L("execLbl") .. " " .. executorName
+profileExecLabel.TextColor3 = Color3.fromRGB(150, 150, 170)
+profileExecLabel.TextSize = 10
+profileExecLabel.Font = Enum.Font.Gotham
+profileExecLabel.TextXAlignment = Enum.TextXAlignment.Left
+profileExecLabel.Parent = profileCard
+registerTextColor(profileExecLabel)
+
+local labelObjects = {}
+local function createSettingLabel(textKey, order)
+	local lbl = Instance.new("TextLabel")
+	lbl.Size = UDim2.new(1, -6, 0, 20)
+	lbl.LayoutOrder = order
+	lbl.BackgroundTransparency = 1
+	lbl.Text = L(textKey)
+	lbl.TextColor3 = Color3.fromRGB(180, 180, 200)
+	lbl.TextSize = 10
+	lbl.Font = Enum.Font.GothamMedium
+	lbl.TextXAlignment = Enum.TextXAlignment.Left
+	lbl.Parent = settingsTab
+	table.insert(labelObjects, {lbl = lbl, key = textKey})
+	registerTextColor(lbl)
+	return lbl
+end
+
+createSettingLabel("lblTitleChange", 1)
+
+local nameBox = Instance.new("TextBox")
+nameBox.Size = UDim2.new(1, -6, 0, 30)
+nameBox.LayoutOrder = 2
+nameBox.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+nameBox.BorderSizePixel = 0
+nameBox.Text = "VSC Hub || mm2"
+nameBox.TextColor3 = Color3.fromRGB(220, 220, 230)
+nameBox.TextSize = 11
+nameBox.Font = Enum.Font.Gotham
+nameBox.ClearTextOnFocus = false
+nameBox.Parent = settingsTab
+
+local nameBoxCorner = Instance.new("UICorner")
+nameBoxCorner.CornerRadius = UDim.new(0, 6)
+nameBoxCorner.Parent = nameBox
+
+nameBox.FocusLost:Connect(function()
+	if nameBox.Text ~= "" then
+		titleLabel.Text = nameBox.Text
+	end
+end)
+
+createSettingLabel("lblThemeColor", 3)
+
+local colorContainer1 = Instance.new("Frame")
+colorContainer1.Size = UDim2.new(1, -6, 0, 28)
+colorContainer1.LayoutOrder = 4
+colorContainer1.BackgroundTransparency = 1
+colorContainer1.Parent = settingsTab
+
+local cLayout1 = Instance.new("UIListLayout")
+cLayout1.FillDirection = Enum.FillDirection.Horizontal
+cLayout1.SortOrder = Enum.SortOrder.LayoutOrder
+cLayout1.Padding = UDim.new(0, 6)
+cLayout1.Parent = colorContainer1
+
+local function addThemeColorButton(color, order)
+	local cBtn = Instance.new("TextButton")
+	cBtn.Size = UDim2.new(0, 28, 0, 28)
+	cBtn.BackgroundColor3 = color
+	cBtn.BorderSizePixel = 0
+	cBtn.Text = ""
+	cBtn.LayoutOrder = order
+	cBtn.Parent = colorContainer1
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 6)
+	btnCorner.Parent = cBtn
+
+	cBtn.MouseButton1Click:Connect(function()
+		mainStroke.Color = color
+		floatStroke.Color = color
+		pCardStroke.Color = color
+	end)
+end
+
+addThemeColorButton(Color3.fromRGB(160, 80, 255), 1)
+addThemeColorButton(Color3.fromRGB(60, 100, 255), 2)
+addThemeColorButton(Color3.fromRGB(220, 60, 90), 3)
+addThemeColorButton(Color3.fromRGB(60, 180, 120), 4)
+addThemeColorButton(Color3.fromRGB(240, 160, 40), 5)
+
+createSettingLabel("lblTextColor", 5)
+
+local colorContainer2 = Instance.new("Frame")
+colorContainer2.Size = UDim2.new(1, -6, 0, 28)
+colorContainer2.LayoutOrder = 6
+colorContainer2.BackgroundTransparency = 1
+colorContainer2.Parent = settingsTab
+
+local cLayout2 = Instance.new("UIListLayout")
+cLayout2.FillDirection = Enum.FillDirection.Horizontal
+cLayout2.SortOrder = Enum.SortOrder.LayoutOrder
+cLayout2.Padding = UDim.new(0, 6)
+cLayout2.Parent = colorContainer2
+
+local function addTextColorButton(color, order)
+	local cBtn = Instance.new("TextButton")
+	cBtn.Size = UDim2.new(0, 28, 0, 28)
+	cBtn.BackgroundColor3 = color
+	cBtn.BorderSizePixel = 0
+	cBtn.Text = ""
+	cBtn.LayoutOrder = order
+	cBtn.Parent = colorContainer2
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 6)
+	btnCorner.Parent = cBtn
+
+	cBtn.MouseButton1Click:Connect(function()
+		for _, obj in ipairs(registeredTextObjects) do
+			if obj and obj.Parent then
+				obj.TextColor3 = color
+			end
+		end
+	end)
+end
+
+addTextColorButton(Color3.fromRGB(240, 240, 240), 1)
+addTextColorButton(Color3.fromRGB(160, 80, 255), 2)
+addTextColorButton(Color3.fromRGB(80, 150, 255), 3)
+addTextColorButton(Color3.fromRGB(220, 80, 80), 4)
+addTextColorButton(Color3.fromRGB(240, 200, 80), 5)
+
+createSettingLabel("lblIceValkOffset", 7)
+
+local offsetContainer = Instance.new("Frame")
+offsetContainer.Size = UDim2.new(1, -6, 0, 28)
+offsetContainer.LayoutOrder = 8
+offsetContainer.BackgroundTransparency = 1
+offsetContainer.Parent = settingsTab
+
+local oLayout = Instance.new("UIListLayout")
+oLayout.FillDirection = Enum.FillDirection.Horizontal
+oLayout.SortOrder = Enum.SortOrder.LayoutOrder
+oLayout.Padding = UDim.new(0, 6)
+oLayout.Parent = offsetContainer
+
+local function addOffsetButton(val, labelText, order)
+	local oBtn = Instance.new("TextButton")
+	oBtn.Size = UDim2.new(0, 42, 0, 28)
+	oBtn.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+	oBtn.BorderSizePixel = 0
+	oBtn.Text = labelText
+	oBtn.TextColor3 = Color3.fromRGB(220, 220, 230)
+	oBtn.TextSize = 10
+	oBtn.Font = Enum.Font.GothamMedium
+	oBtn.LayoutOrder = order
+	oBtn.Parent = offsetContainer
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 6)
+	btnCorner.Parent = oBtn
+
+	oBtn.MouseButton1Click:Connect(function()
+		iceValkOffsetZ = val
+	end)
+end
+
+addOffsetButton(0.0, "0.0", 1)
+addOffsetButton(0.1, "0.1", 2)
+addOffsetButton(0.2, "0.2", 3)
+addOffsetButton(0.3, "0.3", 4)
+addOffsetButton(0.4, "0.4", 5)
+
+createSettingLabel("lblKorbloxOffset", 9)
+
+local liveKorbloxDisplay = Instance.new("TextLabel")
+liveKorbloxDisplay.Size = UDim2.new(1, -6, 0, 26)
+liveKorbloxDisplay.LayoutOrder = 10
+liveKorbloxDisplay.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+liveKorbloxDisplay.BorderSizePixel = 0
+liveKorbloxDisplay.Text = "X: 0.2 | Y: -0.6 | Z: 0.0"
+liveKorbloxDisplay.TextColor3 = Color3.fromRGB(220, 220, 230)
+liveKorbloxDisplay.TextSize = 10
+liveKorbloxDisplay.Font = Enum.Font.Gotham
+liveKorbloxDisplay.Parent = settingsTab
+
+local liveKorbloxCorner = Instance.new("UICorner")
+liveKorbloxCorner.CornerRadius = UDim.new(0, 6)
+liveKorbloxCorner.Parent = liveKorbloxDisplay
+
+local function createKorbloxControlRow(labelName, vectorIndex, order)
+	local rowContainer = Instance.new("Frame")
+	rowContainer.Size = UDim2.new(1, -6, 0, 28)
+	rowContainer.LayoutOrder = order
+	rowContainer.BackgroundTransparency = 1
+	rowContainer.Parent = settingsTab
+
+	local rLayout = Instance.new("UIListLayout")
+	rLayout.FillDirection = Enum.FillDirection.Horizontal
+	rLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	rLayout.Padding = UDim.new(0, 6)
+	rLayout.Parent = rowContainer
+
+	local titleLbl = Instance.new("TextLabel")
+	titleLbl.Size = UDim2.new(0, 110, 0, 28)
+	titleLbl.BackgroundTransparency = 1
+	titleLbl.Text = labelName
+	titleLbl.TextColor3 = Color3.fromRGB(180, 180, 200)
+	titleLbl.TextSize = 10
+	titleLbl.Font = Enum.Font.GothamMedium
+	titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+	titleLbl.LayoutOrder = 1
+	titleLbl.Parent = rowContainer
+	registerTextColor(titleLbl)
+
+	local function addStepButton(text, amount, subOrder)
+		local sBtn = Instance.new("TextButton")
+		sBtn.Size = UDim2.new(0, 32, 0, 28)
+		sBtn.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+		sBtn.BorderSizePixel = 0
+		sBtn.Text = text
+		sBtn.TextColor3 = Color3.fromRGB(220, 220, 230)
+		sBtn.TextSize = 10
+		sBtn.Font = Enum.Font.GothamMedium
+		sBtn.LayoutOrder = subOrder
+		sBtn.Parent = rowContainer
+
+		local btnCorner = Instance.new("UICorner")
+		btnCorner.CornerRadius = UDim.new(0, 6)
+		btnCorner.Parent = sBtn
+
+		sBtn.MouseButton1Click:Connect(function()
+			if vectorIndex == 1 then
+				korbloxOffset = korbloxOffset + Vector3.new(amount, 0, 0)
+			elseif vectorIndex == 2 then
+				korbloxOffset = korbloxOffset + Vector3.new(0, amount, 0)
+			elseif vectorIndex == 3 then
+				korbloxOffset = korbloxOffset + Vector3.new(0, 0, amount)
+			end
+		end)
+	end
+
+	addStepButton("-0.2", -0.2, 2)
+	addStepButton("-0.1", -0.1, 3)
+	addStepButton("+0.1", 0.1, 4)
+	addStepButton("+0.2", 0.2, 5)
+end
+
+createKorbloxControlRow("X-Axis", 1, 11)
+createKorbloxControlRow("Y-Axis", 2, 12)
+createKorbloxControlRow("Z-Axis", 3, 13)
+
+createSettingLabel("lblSaveConfig", 14)
+
+local saveConfigBtn = Instance.new("TextButton")
+saveConfigBtn.Size = UDim2.new(1, -6, 0, 36)
+saveConfigBtn.LayoutOrder = 15
+saveConfigBtn.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+saveConfigBtn.BorderSizePixel = 0
+saveConfigBtn.Text = L("saveBtnText")
+saveConfigBtn.TextColor3 = Color3.fromRGB(220, 220, 230)
+saveConfigBtn.Font = Enum.Font.GothamMedium
+saveConfigBtn.TextSize = 11
+saveConfigBtn.AutoButtonColor = false
+saveConfigBtn.Parent = settingsTab
+
+local saveCorner = Instance.new("UICorner")
+saveCorner.CornerRadius = UDim.new(0, 6)
+saveCorner.Parent = saveConfigBtn
+
+local saveStroke = Instance.new("UIStroke")
+saveStroke.Color = Color3.fromRGB(45, 45, 60)
+saveStroke.Transparency = 0.5
+saveStroke.Thickness = 1
+saveStroke.Parent = saveConfigBtn
+
+saveConfigBtn.MouseEnter:Connect(function()
+	TweenService:Create(saveConfigBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(160, 80, 255), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+end)
+saveConfigBtn.MouseLeave:Connect(function()
+	TweenService:Create(saveConfigBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(24, 24, 30), TextColor3 = Color3.fromRGB(220, 220, 230)}):Play()
+end)
+
+saveConfigBtn.MouseButton1Click:Connect(function()
+	savedConfig.iceValkZ = iceValkOffsetZ
+	savedConfig.korbloxX = korbloxOffset.X
+	savedConfig.korbloxY = korbloxOffset.Y
+	savedConfig.korbloxZ = korbloxOffset.Z
+	savedConfig.hasSaved = true
+	
+	statusLabel.Text = L("statusSaved")
+	statusLabel.TextColor3 = Color3.fromRGB(80, 200, 120)
+	
+	pcall(function()
+		StarterGui:SetCore("SendNotification", { 
+			Title = "VSC Hub";
+			Text = "Configuration saved to local memory!";
+			Duration = 3;
+		})
+	end)
+end)
+
+createSettingLabel("lblLang", 16)
+
+local langContainer = Instance.new("Frame")
+langContainer.Size = UDim2.new(1, -6, 0, 28)
+langContainer.LayoutOrder = 17
+langContainer.BackgroundTransparency = 1
+langContainer.Parent = settingsTab
+
+local langLayout = Instance.new("UIListLayout")
+langLayout.FillDirection = Enum.FillDirection.Horizontal
+langLayout.SortOrder = Enum.SortOrder.LayoutOrder
+langLayout.Padding = UDim.new(0, 6)
+langLayout.Parent = langContainer
+
+local hotkeyDescLabel = nil
+
+local function updateLanguageUI()
+	titleLabel.Text = nameBox.Text == "VSC Hub || mm2" and L("title") or titleLabel.Text
+	for _, tabObj in ipairs(tabButtonObjects) do
+		tabObj.btn.Text = L(tabObj.key)
+	end
+	for _, lblObj in ipairs(labelObjects) do
+		lblObj.lbl.Text = L(lblObj.key)
+	end
+	saveConfigBtn.Text = L("saveBtnText")
+	hotkeyDescLabel.Text = L("hotkeyDesc")
+	statusLabel.Text = L("statusReady")
+	profileHeader.Text = L("profileTitle")
+	profilePlayerLabel.Text = L("playerLbl") .. " " .. player.Name
+	profileCreatorLabel.Text = L("creatorLbl") .. " c00lkkid1ng"
+	profileExecLabel.Text = L("execLbl") .. " " .. executorName
+end
+
+local function addLanguageButton(code, displayLabel, order)
+	local lBtn = Instance.new("TextButton")
+	lBtn.Size = UDim2.new(0, 65, 0, 28)
+	lBtn.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+	lBtn.BorderSizePixel = 0
+	lBtn.Text = displayLabel
+	lBtn.TextColor3 = Color3.fromRGB(220, 220, 230)
+	lBtn.TextSize = 10
+	lBtn.Font = Enum.Font.GothamMedium
+	lBtn.LayoutOrder = order
+	lBtn.Parent = langContainer
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 6)
+	btnCorner.Parent = lBtn
+
+	lBtn.MouseButton1Click:Connect(function()
+		currentLang = code
+		updateLanguageUI()
+	end)
+end
+
+addLanguageButton("de", "Deutsch", 1)
+addLanguageButton("en", "English", 2)
+
+createSettingLabel("lblHotkey", 18)
+
+hotkeyDescLabel = Instance.new("TextLabel")
+hotkeyDescLabel.Size = UDim2.new(1, -6, 0, 28)
+hotkeyDescLabel.LayoutOrder = 19
+hotkeyDescLabel.BackgroundTransparency = 1
+hotkeyDescLabel.Text = L("hotkeyDesc")
+hotkeyDescLabel.TextColor3 = Color3.fromRGB(150, 150, 170)
+hotkeyDescLabel.TextSize = 10
+hotkeyDescLabel.Font = Enum.Font.Gotham
+hotkeyDescLabel.TextWrapped = true
+hotkeyDescLabel.TextXAlignment = Enum.TextXAlignment.Left
+hotkeyDescLabel.Parent = settingsTab
+registerTextColor(hotkeyDescLabel)
+
+RunService.Heartbeat:Connect(function()
+	local char = player.Character
+	if char and isKorbloxActive then
+		local humanoid = char:FindFirstChildOfClass("Humanoid")
+		if humanoid and humanoid.RigType == Enum.HumanoidRigType.R15 then
+			local korbloxLeg = char:FindFirstChild("KorbloxLeg")
+			if korbloxLeg then
+				local weld = korbloxLeg:FindFirstChildOfClass("Weld")
+				if weld then
+					weld.C0 = CFrame.new(korbloxOffset)
+				end
+			end
+		end
+	end
+	
+	if liveKorbloxDisplay and liveKorbloxDisplay.Parent then
+		liveKorbloxDisplay.Text = string.format("X: %.1f | Y: %.1f | Z: %.1f", korbloxOffset.X, korbloxOffset.Y, korbloxOffset.Z)
+	end
+end)
+
+local minimized = false
+minBtn.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	sidebar.Visible = not minimized
+	contentArea.Visible = not minimized
+	
+	if minimized then
+		mainFrame.Size = UDim2.new(0, 480, 0, 38)
+		minBtn.Text = "+"
+	else
+		mainFrame.Size = UDim2.new(0, 480, 0, 330)
+		minBtn.Text = "-"
+		for name, frame in pairs(tabs) do
+			frame.Visible = (name == activeTabName)
+		end
+	end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if not gameProcessed and input.KeyCode == Enum.KeyCode.Q then
+		if mainFrame.Visible then
+			mainFrame.Visible = false
+			floatGui.Enabled = true
+		else
+			mainFrame.Visible = true
+			floatGui.Enabled = false
+		end
+	end
+end)
+
+player.CharacterAdded:Connect(function(newChar)
+	newChar:WaitForChild("Head", 5)
+	task.wait(0.6)
+	if isHeadless then
+		applyHeadlessState(newChar)
+	end
+	if isKorbloxActive then
+		local humanoid = newChar:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			if humanoid.RigType == Enum.HumanoidRigType.R6 then
+				applyKorbloxR6(newChar)
+			elseif humanoid.RigType == Enum.HumanoidRigType.R15 then
+				applyKorbloxR15(newChar)
+			end
+		end
+	end
+	local itemsToReload = equippedItems
+	equippedItems = {}
+	for _, data in ipairs(itemsToReload) do
+		loadAssetWithRetry(data.id, newChar)
+	end
+	
+	fixCreatorTag(newChar)
+end)
+
+if player.Character then
+	fixCreatorTag(player.Character)
+end
+
+pcall(function()
+	StarterGui:SetCore("SendNotification", { 
+		Title = "VSC Hub";
+		Text = "Loaded successfully. Systems online.";
+		Duration = 4;
+	})
+end)
